@@ -1,0 +1,152 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "IntelliType Elite config",
+  "description": "See Config.cs for the C# side of this shape. Hot-reloaded by ConfigWatcher.cs on save.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["device", "wheel", "buttons"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "device": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["vendorId", "productId"],
+      "properties": {
+        "vendorId": {
+          "type": "string",
+          "pattern": "^0[xX][0-9A-Fa-f]+$",
+          "description": "USB vendor ID, e.g. \"0x045E\" (Microsoft). Changing this requires an app restart -- it governs which HID collections get opened at startup."
+        },
+        "productId": {
+          "type": "string",
+          "pattern": "^0[xX][0-9A-Fa-f]+$",
+          "description": "USB product ID, e.g. \"0x008A\" (Wireless Desktop Elite receiver). Changing this requires an app restart."
+        }
+      }
+    },
+    "wheel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reportId", "deltaByteOffset"],
+      "properties": {
+        "reportId": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "HID report ID the wheel's delta reports arrive on."
+        },
+        "deltaByteOffset": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Byte index (including the report ID byte at 0) holding the signed wheel delta."
+        },
+        "notchSize": {
+          "type": "integer",
+          "default": 120,
+          "description": "Windows mouse-wheel notch size (WHEEL_DELTA is 120); multiplied by the raw HID delta."
+        }
+      }
+    },
+    "buttons": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/button" }
+    }
+  },
+  "$defs": {
+    "button": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "reportId", "byteOffset", "bitMask", "action"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Free-form identifier, used in log output and to track press/release state."
+        },
+        "reportId": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "HID report ID this button's press/release bit is reported on."
+        },
+        "byteOffset": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Byte index (including the report ID byte at 0) containing this button's bit."
+        },
+        "bitMask": {
+          "type": "string",
+          "pattern": "^0[xX][0-9A-Fa-f]+$",
+          "description": "Single-bit mask within the byte at byteOffset, e.g. \"0x20\"."
+        },
+        "action": { "$ref": "#/$defs/action" },
+        "modifierOverrides": {
+          "type": "array",
+          "description": "Checked when no appOverrides entry matches the foreground app.",
+          "items": { "$ref": "#/$defs/modifierOverride" }
+        },
+        "appOverrides": {
+          "type": "object",
+          "description": "Keyed by process name (with or without .exe, case-insensitive), e.g. \"OUTLOOK\". Matched against the foreground window at press time. Each entry has its own default action plus its own optional modifierOverrides.",
+          "additionalProperties": { "$ref": "#/$defs/appOverride" }
+        }
+      }
+    },
+    "appOverride": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["action"],
+      "properties": {
+        "action": { "$ref": "#/$defs/action" },
+        "modifierOverrides": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/modifierOverride" }
+        }
+      }
+    },
+    "modifierOverride": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["modifiers", "action"],
+      "properties": {
+        "modifiers": {
+          "type": "string",
+          "pattern": "^(shift|ctrl|control|alt)(\\+(shift|ctrl|control|alt))*$",
+          "description": "One or more of shift/ctrl/alt joined with '+', e.g. \"shift\" or \"ctrl+shift\". Matched against live modifier state (GetAsyncKeyState) at the moment the button is pressed. When several entries could match, the one requiring the most modifiers wins."
+        },
+        "action": { "$ref": "#/$defs/action" }
+      }
+    },
+    "action": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["None", "Keystroke", "Launch", "CloseWindow"],
+          "description": "None: no-op (still logged). Keystroke: SendInput with 'keys'. Launch: Process.Start with 'path'/'args'. CloseWindow: posts WM_SYSCOMMAND/SC_CLOSE to the foreground window (the same command Alt+F4 triggers internally) -- more reliable than simulating Alt+F4 for apps like packaged/UWP Calculator that don't always react to a synthetic keypress."
+        },
+        "keys": {
+          "type": "string",
+          "description": "Only used when type is \"Keystroke\". '+'-joined combo, e.g. \"ctrl+shift+t\" or a single key like \"F5\". Supports ctrl/control, alt, shift, win/windows, esc/escape, tab, enter/return, space, single letters/digits, and F1-F24."
+        },
+        "path": {
+          "type": "string",
+          "description": "Only used when type is \"Launch\". Executable path or URL passed to Process.Start."
+        },
+        "args": {
+          "type": "string",
+          "description": "Only used when type is \"Launch\". Optional command-line arguments."
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "type": { "const": "Keystroke" } } },
+          "then": { "required": ["keys"] }
+        },
+        {
+          "if": { "properties": { "type": { "const": "Launch" } } },
+          "then": { "required": ["path"] }
+        }
+      ]
+    }
+  }
+}

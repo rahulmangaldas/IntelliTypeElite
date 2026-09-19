@@ -1,0 +1,162 @@
+{
+  "$schema": "./config.schema.json",
+  "device": {
+    "vendorId": "0x045E",
+    "productId": "0x008A"
+  },
+  "wheel": {
+    "reportId": 6,
+    "deltaByteOffset": 1,
+    "notchSize": 120
+  },
+  "buttons": [
+    {
+      "name": "MyFavorites1",
+      "reportId": 4,
+      "byteOffset": 4,
+      "bitMask": "0x20",
+      "action": { "type": "None" }
+    },
+    {
+      "name": "MyFavorites2",
+      "reportId": 4,
+      "byteOffset": 4,
+      "bitMask": "0x40",
+      "action": { "type": "None" }
+    },
+    {
+      "name": "MyFavorites3",
+      "reportId": 4,
+      "byteOffset": 4,
+      "bitMask": "0x80",
+      "action": { "type": "None" }
+    },
+    {
+      "name": "MyFavorites4",
+      "reportId": 4,
+      "byteOffset": 5,
+      "bitMask": "0x01",
+      "action": { "type": "None" }
+    },
+    {
+      "name": "MyFavorites5",
+      "reportId": 4,
+      "byteOffset": 5,
+      "bitMask": "0x02",
+      "action": { "type": "None" }
+    },
+    {
+      "name": "FavoritesLegend",
+      "reportId": 4,
+      "byteOffset": 4,
+      "bitMask": "0x10",
+      "action": { "type": "None" }
+    },
+    {
+      "name": "F1_Help",
+      "reportId": 4,
+      "byteOffset": 3,
+      "bitMask": "0x04",
+      "action": { "type": "Keystroke", "keys": "f1" }
+    },
+    {
+      "name": "F2_Undo",
+      "reportId": 4,
+      "byteOffset": 2,
+      "bitMask": "0x01",
+      "action": { "type": "Keystroke", "keys": "ctrl+z" }
+    },
+    {
+      "name": "F3_Redo",
+      "reportId": 4,
+      "byteOffset": 2,
+      "bitMask": "0x02",
+      "action": { "type": "Keystroke", "keys": "ctrl+y" }
+    },
+    {
+      "name": "F4_New",
+      "reportId": 4,
+      "byteOffset": 2,
+      "bitMask": "0x80",
+      "action": { "type": "Keystroke", "keys": "ctrl+n" }
+    },
+    {
+      "name": "F5_Open",
+      "reportId": 4,
+      "byteOffset": 2,
+      "bitMask": "0x10",
+      "action": { "type": "Keystroke", "keys": "ctrl+o" }
+    },
+    {
+      "name": "F6_Close",
+      "reportId": 4,
+      "byteOffset": 2,
+      "bitMask": "0x20",
+      "action": { "type": "CloseWindow" },
+      "appOverrides": {
+        "winword": { "action": { "type": "Keystroke", "keys": "ctrl+w" } },
+        "excel": { "action": { "type": "Keystroke", "keys": "ctrl+w" } },
+        "powerpnt": { "action": { "type": "Keystroke", "keys": "ctrl+w" } },
+        "outlook": { "action": { "type": "Keystroke", "keys": "ctrl+w" } },
+        "chrome": { "action": { "type": "Keystroke", "keys": "ctrl+w" } },
+        "msedge": { "action": { "type": "Keystroke", "keys": "ctrl+w" } },
+        "firefox": { "action": { "type": "Keystroke", "keys": "ctrl+w" } },
+        "explorer": { "action": { "type": "Keystroke", "keys": "ctrl+w" } }
+      }
+    },
+    {
+      "name": "F7_Reply",
+      "reportId": 4,
+      "byteOffset": 3,
+      "bitMask": "0x10",
+      "action": { "type": "None" },
+      "appOverrides": {
+        "outlook": { "action": { "type": "Keystroke", "keys": "ctrl+r" } },
+        "thunderbird": { "action": { "type": "Keystroke", "keys": "ctrl+r" } }
+      }
+    },
+    {
+      "name": "F8_Forward",
+      "reportId": 4,
+      "byteOffset": 3,
+      "bitMask": "0x20",
+      "action": { "type": "None" },
+      "appOverrides": {
+        "outlook": { "action": { "type": "Keystroke", "keys": "ctrl+f" } },
+        "thunderbird": { "action": { "type": "Keystroke", "keys": "ctrl+l" } }
+      }
+    },
+    {
+      "name": "F9_Send",
+      "reportId": 4,
+      "byteOffset": 3,
+      "bitMask": "0x40",
+      "action": { "type": "None" },
+      "appOverrides": {
+        "outlook": { "action": { "type": "Keystroke", "keys": "ctrl+enter" } },
+        "thunderbird": { "action": { "type": "Keystroke", "keys": "ctrl+enter" } }
+      }
+    },
+    {
+      "name": "F10_Spell",
+      "reportId": 4,
+      "byteOffset": 2,
+      "bitMask": "0x04",
+      "action": { "type": "Keystroke", "keys": "f7" }
+    },
+    {
+      "name": "F11_Save",
+      "reportId": 4,
+      "byteOffset": 2,
+      "bitMask": "0x40",
+      "action": { "type": "Keystroke", "keys": "ctrl+s" }
+    },
+    {
+      "name": "F12_Print",
+      "reportId": 4,
+      "byteOffset": 2,
+      "bitMask": "0x08",
+      "action": { "type": "Keystroke", "keys": "ctrl+p" }
+    }
+  ]
+}

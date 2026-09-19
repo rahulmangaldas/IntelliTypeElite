@@ -1,0 +1,11 @@
+bin/
+obj/
+publish/
+*.user
+keymapper.log
+discovery-log-*.txt
+
+# Original vendor installer, kept locally as reference for the HID/command mapping
+# but not committed (redistribution of Microsoft's installer, plus it's large).
+IntelliType Pro 8.20.469.0 Setup.exe
+IntelliType Pro 8.20.469.0/
