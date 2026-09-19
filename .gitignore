@@ -4,6 +4,7 @@ publish/
 *.user
 keymapper.log
 discovery-log-*.txt
+CLAUDE.md
 
 # Original vendor installer, kept locally as reference for the HID/command mapping
 # but not committed (redistribution of Microsoft's installer, plus it's large).
