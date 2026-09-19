@@ -31,7 +31,7 @@ internal static class Program
         {
             menu.Items.Add("Open log", null, (_, _) =>
             {
-                string logPath = Path.Combine(AppContext.BaseDirectory, "keymapper.log");
+                string logPath = Path.Combine(AppContext.BaseDirectory, "IntelliTypeElite.log");
                 if (File.Exists(logPath))
                     Process.Start(new ProcessStartInfo(logPath) { UseShellExecute = true });
             });

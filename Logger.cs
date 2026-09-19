@@ -5,7 +5,7 @@ namespace IntelliTypeElite;
 // unasked. Program.cs sets Enabled before starting the listener.
 internal static class Logger
 {
-    private static readonly string Path = System.IO.Path.Combine(AppContext.BaseDirectory, "keymapper.log");
+    private static readonly string Path = System.IO.Path.Combine(AppContext.BaseDirectory, "IntelliTypeElite.log");
     private static readonly object Lock = new();
 
     public static bool Enabled { get; set; }
