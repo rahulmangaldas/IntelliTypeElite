@@ -108,8 +108,8 @@
       "properties": {
         "modifiers": {
           "type": "string",
-          "pattern": "^(shift|ctrl|control|alt)(\\+(shift|ctrl|control|alt))*$",
-          "description": "One or more of shift/ctrl/alt joined with '+', e.g. \"shift\" or \"ctrl+shift\". Matched against live modifier state (GetAsyncKeyState) at the moment the button is pressed. When several entries could match, the one requiring the most modifiers wins."
+          "pattern": "^(shift|ctrl|control|alt|win|windows)(\\+(shift|ctrl|control|alt|win|windows))*$",
+          "description": "One or more of shift/ctrl/alt/win joined with '+', e.g. \"shift\" or \"ctrl+shift\". Matched against live modifier state (GetAsyncKeyState) at the moment the button is pressed. When several entries could match, the one requiring the most modifiers wins."
         },
         "action": { "$ref": "#/$defs/action" }
       }

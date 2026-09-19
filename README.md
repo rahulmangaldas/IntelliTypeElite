@@ -14,15 +14,15 @@ Microsoft dropped support for this keyboard long ago in `IntelliType Pro 8.2`; `
 
 ## Installing
 
-Download `IntelliTypeElite.zip` from the [latest release](https://github.com/rahulmangaldas/IntelliTypeElite/releases/latest), extract it anywhere, and run `IntelliTypeElite.exe`; on first run it copies `config.json` to `%USERPROFILE%\.config\IntelliTypeElite\config.json`, which is the copy you actually edit afterward.
+Download `IntelliTypeElite.zip` from the [latest release](https://github.com/rahulmangaldas/IntelliTypeElite/releases/latest), extract it anywhere, and run `IntelliTypeElite.exe`; it copies  `config.json` to `%USERPROFILE%\.config\IntelliTypeElite\config.json` on first run and uses that copy.
 
 ## Configuring
 
-Edit `config.json`: changes hot-reload, no restart needed. See `config.schema.json` for the full shape (editors like VS Code will give you autocomplete). Each button supports:
+Edit `config.json`: changes hot-reload, no restart needed. See `config.schema.json` for the schema (JSON aware editors like Visual Studio Code will give you autocomplete and syntax highlighting). Each button supports:
 
 - A default action: `None`, `Keystroke`, `Launch`, or `CloseWindow`
-- `appOverrides` — different behavior per foreground app
-- `modifierOverrides` — different behavior when Shift/Ctrl/Alt is held
+- `appOverrides` — different behavior per app
+- `modifierOverrides` — different behavior when Shift/Ctrl/Alt/Win is held
 
 ## Logging
 

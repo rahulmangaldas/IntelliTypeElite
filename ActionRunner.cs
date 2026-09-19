@@ -63,6 +63,8 @@ internal sealed class ActionRunner
     private const int VK_SHIFT = 0x10;
     private const int VK_CONTROL = 0x11;
     private const int VK_MENU = 0x12; // Alt
+    private const int VK_LWIN = 0x5B;
+    private const int VK_RWIN = 0x5C;
 
     private const uint WM_SYSCOMMAND = 0x0112;
     private const nint SC_CLOSE = 0xF060;
@@ -181,6 +183,7 @@ internal sealed class ActionRunner
             "shift" => IsKeyDown(VK_SHIFT),
             "ctrl" or "control" => IsKeyDown(VK_CONTROL),
             "alt" => IsKeyDown(VK_MENU),
+            "win" or "windows" => IsKeyDown(VK_LWIN) || IsKeyDown(VK_RWIN),
             _ => false,
         });
     }
