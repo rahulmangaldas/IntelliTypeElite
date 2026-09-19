@@ -14,7 +14,7 @@ Microsoft dropped support for this keyboard long ago in `IntelliType Pro 8.2`; `
 
 ## Installing
 
-Download `IntelliTypeElite.exe` and `config.json` from the [latest release](https://github.com/rahulmangaldas/IntelliTypeElite/releases/latest) into the same folder and run the exe.
+Download `IntelliTypeElite.zip` from the [latest release](https://github.com/rahulmangaldas/IntelliTypeElite/releases/latest), extract it anywhere, and run `IntelliTypeElite.exe`; on first run it copies `config.json` to `%USERPROFILE%\.config\IntelliTypeElite\config.json`, which is the copy you actually edit afterward.
 
 ## Configuring
 
