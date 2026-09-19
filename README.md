@@ -1,13 +1,14 @@
 # IntelliType Elite
 
-A lightweight tray app that restores the extra buttons and scroll wheel on a Microsoft
-Wireless Desktop Elite keyboard, without needing Microsoft Mouse and Keyboard Center.
+A lightweight tray app that restores the extra buttons and scroll wheel functionality on a Microsoft
+Wireless Desktop Elite keyboard.
 
 ## Why
 
-MMKC's `dc3d.sys` driver caused repeated BSODs on this keyboard's volume keys. This app
-reads the keyboard's HID reports directly and maps them to actions of your choosing —
-no MMKC, no crashing driver.
+Microsoft dropped support for this keyboard long ago — the last driver it shipped,
+Mouse and Keyboard Center's `dc3d.sys`, caused repeated BSODs on this keyboard's volume
+keys. This app reads the keyboard's HID reports directly and maps them to actions of
+your choosing — no MMKC, no crashing driver.
 
 ## Requirements
 
