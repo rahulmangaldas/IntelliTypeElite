@@ -3,6 +3,11 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net10.0-windows</TargetFramework>
+    <!-- Framework-dependent, so roll forward to whatever .NET major/minor is actually
+         installed (still never rolls backward: a .NET 10 runtime or later is required
+         regardless). Without this, the default "Minor" policy only crosses to a higher
+         major when no matching major is installed at all. -->
+    <RollForward>LatestMajor</RollForward>
     <Nullable>enable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
