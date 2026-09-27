@@ -4,6 +4,8 @@ namespace IntelliTypeElite;
 
 internal static class Program
 {
+    private const string MouseDebounceStatusTag = "MouseDebounceStatus";
+
     [STAThread]
     private static void Main(string[] args)
     {
@@ -30,6 +32,10 @@ internal static class Program
         };
 
         var menu = new ContextMenuStrip();
+        menu.Opening += (_, _) => RefreshMouseDebounceStatus(menu, mouseDebouncer);
+
+        menu.Items.Add("Open config", null, (_, _) =>
+            Process.Start(new ProcessStartInfo(configPath) { UseShellExecute = true }));
         if (Logger.Enabled)
         {
             menu.Items.Add("Open log", null, (_, _) =>
@@ -86,4 +92,66 @@ internal static class Program
 
         return configPath;
     }
+
+    // Fixed display order, independent of how buttons are listed in config.json.
+    private static readonly string[] MouseButtonOrder = { "left", "middle", "right", "x1", "x2" };
+
+    // Rebuilds the status rows (and trailing separator) at the top of the tray menu
+    // from the live config each time the menu is about to be shown, rather than
+    // pushing updates the instant config.json hot-reloads.
+    private static void RefreshMouseDebounceStatus(ContextMenuStrip menu, MouseDebouncer mouseDebouncer)
+    {
+        for (int i = menu.Items.Count - 1; i >= 0; i--)
+        {
+            if (menu.Items[i].Tag as string == MouseDebounceStatusTag)
+                menu.Items.RemoveAt(i);
+        }
+
+        var rows = new List<ToolStripItem> { MakeStatusRow("Mouse debounce") };
+
+        var config = mouseDebouncer.CurrentConfig;
+        if (!config.Enabled)
+        {
+            rows.Add(MakeStatusRow("Off"));
+        }
+        else
+        {
+            var enabledButtons = MouseButtonOrder
+                .Select(name => config.Buttons.FirstOrDefault(b => string.Equals(b.Button, name, StringComparison.OrdinalIgnoreCase)))
+                .Where(b => b is { Enabled: true })
+                .ToList();
+
+            if (enabledButtons.Count == 0)
+                rows.Add(MakeStatusRow("On (no buttons enabled)", indent: true));
+            else
+                foreach (var button in enabledButtons)
+                    rows.Add(MakeStatusRow($"{DescribeButton(button!.Button)}: {button.Threshold}ms", indent: true));
+        }
+
+        rows.Add(new ToolStripSeparator { Tag = MouseDebounceStatusTag });
+
+        for (int i = 0; i < rows.Count; i++)
+            menu.Items.Insert(i, rows[i]);
+    }
+
+    // ToolStripLabel, not ToolStripMenuItem -- a disabled ToolStripMenuItem still
+    // participates in mouse hover/selection in the default renderer (grey text, but
+    // still highlights); ToolStripLabel is never selectable, so it renders as a
+    // completely dead row, like the separator below it. ToolStripLabel's own default
+    // padding is tighter than a menu item's, which is what made these rows look
+    // crowded next to "Open config"/"Open log"/"Exit" -- match that vertical padding
+    // explicitly. indent nests a row (a per-button line, or the "no buttons enabled"
+    // fallback that stands in for the button list) under the "Mouse debounce"/"Off"
+    // header rows, which stay at the base indent.
+    private static ToolStripLabel MakeStatusRow(string text, bool indent = false) =>
+        new(text)
+        {
+            Enabled = false,
+            Tag = MouseDebounceStatusTag,
+            Padding = new Padding(indent ? 20 : 4, 3, 4, 3),
+        };
+
+    // "left"/"right"/"middle" -> "Left"/"Right"/"Middle"; "x1"/"x2" -> "X1"/"X2".
+    private static string DescribeButton(string button) =>
+        button.Length == 2 ? button.ToUpperInvariant() : char.ToUpperInvariant(button[0]) + button[1..];
 }

@@ -110,6 +110,10 @@ internal sealed class MouseDebouncer : IDisposable
 
     public void UpdateConfig(MouseDebounceConfig config) => _config = config;
 
+    // Read by Program.cs's tray menu to show current debounce status; the menu only
+    // reads this right before it's shown, so no need to notify on change.
+    public MouseDebounceConfig CurrentConfig => _config;
+
     private void RunHookThread()
     {
         _hookThreadId = GetCurrentThreadId();
