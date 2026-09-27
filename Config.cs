@@ -24,7 +24,9 @@ internal sealed class WheelConfig
 
 internal sealed class ActionConfig
 {
-    // "None" (log only), "Keystroke" (SendInput), "Launch" (Process.Start).
+    // "None" (log only), "Keystroke" (SendInput), "Launch" (Process.Start),
+    // "CloseWindow" (WM_SYSCOMMAND/SC_CLOSE), "ShowFavorites" (pops up an overlay listing
+    // the MyFavorites1-5 buttons' current assignments).
     [JsonPropertyName("type")] public string Type { get; set; } = "None";
     [JsonPropertyName("keys")] public string? Keys { get; set; }
     [JsonPropertyName("path")] public string? Path { get; set; }
@@ -33,8 +35,8 @@ internal sealed class ActionConfig
 
 internal sealed class ModifierOverride
 {
-    // "shift", "ctrl", "alt", or a combo like "ctrl+shift". Matched against the live
-    // modifier state (GetAsyncKeyState) at the moment the button is pressed.
+    // "shift", "ctrl", "alt", "win", or a combo like "ctrl+shift". Matched against the
+    // live modifier state (GetAsyncKeyState) at the moment the button is pressed.
     [JsonPropertyName("modifiers")] public string Modifiers { get; set; } = "";
     [JsonPropertyName("action")] public ActionConfig Action { get; set; } = new();
 }

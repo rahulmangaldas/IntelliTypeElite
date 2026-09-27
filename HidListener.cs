@@ -126,7 +126,7 @@ internal sealed class HidListener
                 // fall back to "not pressed" for a button that no longer exists.
                 bool wasPressed = _buttonState.TryGetValue(button.Name, out var prev) && prev;
                 if (pressed && !wasPressed)
-                    _actions.Execute(button);
+                    _actions.Execute(button, config);
                 _buttonState[button.Name] = pressed;
             }
         }

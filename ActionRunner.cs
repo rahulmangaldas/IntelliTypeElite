@@ -79,11 +79,16 @@ internal sealed class ActionRunner
         SendInput(1, new[] { input }, Marshal.SizeOf<INPUT>());
     }
 
-    public void Execute(ButtonConfig button)
+    public void Execute(ButtonConfig button, RootConfig config)
     {
         var action = ResolveAction(button);
         switch (action.Type)
         {
+            case "ShowFavorites":
+                ShowFavorites(config);
+                Logger.Write($"{button.Name}: showed favorites overlay");
+                break;
+
             case "Keystroke":
                 if (!string.IsNullOrWhiteSpace(action.Keys))
                     SendKeystroke(action.Keys);
@@ -126,6 +131,46 @@ internal sealed class ActionRunner
                 break;
         }
     }
+
+    private static void ShowFavorites(RootConfig config)
+    {
+        var labels = Enumerable.Range(1, 5)
+            .Select(i => config.Buttons.FirstOrDefault(b => b.Name == $"MyFavorites{i}"))
+            .Select(b => b is null ? "Unassigned" : DescribeAction(b.Action))
+            .ToList();
+
+        UiThread.Context?.Post(_ => new FavoritesOverlay(labels).Show(), null);
+    }
+
+    private static string DescribeAction(ActionConfig action) => action.Type switch
+    {
+        "Launch" when !string.IsNullOrWhiteSpace(action.Path) => DescribeLaunchTarget(action.Path),
+        "Keystroke" when !string.IsNullOrWhiteSpace(action.Keys) => DescribeKeystroke(action.Keys),
+        _ => "Unassigned",
+    };
+
+    private static string DescribeLaunchTarget(string path)
+    {
+        if (Uri.TryCreate(path, UriKind.Absolute, out var uri) && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps))
+            return uri.PathAndQuery is "/" or "" ? uri.Host : $"{uri.Host}/...";
+
+        try
+        {
+            string? description = FileVersionInfo.GetVersionInfo(path).FileDescription;
+            if (!string.IsNullOrWhiteSpace(description))
+                return description;
+        }
+        catch
+        {
+            // Not a real exe on disk (or no version info) -- fall through to the filename.
+        }
+
+        return Path.GetFileNameWithoutExtension(path);
+    }
+
+    private static string DescribeKeystroke(string combo) =>
+        string.Join('+', combo.Split('+', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(part => char.ToUpperInvariant(part[0]) + part[1..].ToLowerInvariant()));
 
     // Resolution order: app override (matched by foreground process) takes priority
     // over the button's plain default; within whichever of those applies, a held

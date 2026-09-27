@@ -43,6 +43,12 @@ internal static class Program
         });
         trayIcon.ContextMenuStrip = menu;
 
+        // Only installed once a window handle exists (the NotifyIcon's, created above) --
+        // capturing it any earlier (e.g. right after ApplicationConfiguration.Initialize())
+        // would leave this null, since WindowsFormsSynchronizationContext isn't set up until
+        // then.
+        UiThread.Context = SynchronizationContext.Current;
+
         Application.Run();
     }
 

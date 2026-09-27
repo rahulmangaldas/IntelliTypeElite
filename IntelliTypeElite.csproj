@@ -13,6 +13,15 @@
     <PackageReference Include="HidSharp" Version="2.6.4" />
   </ItemGroup>
 
+  <!-- support\ holds the extracted vendor installer and HidDiscovery, a separate throwaway
+       .NET project. Exclude it from this project's default recursive globs, otherwise its
+       sources and generated obj\ (its own AssemblyInfo, etc.) get pulled into this build too. -->
+  <ItemGroup>
+    <Compile Remove="support\**" />
+    <EmbeddedResource Remove="support\**" />
+    <None Remove="support\**" />
+  </ItemGroup>
+
   <ItemGroup>
     <None Include="config.json" CopyToOutputDirectory="PreserveNewest" />
     <None Include="config.schema.json" CopyToOutputDirectory="PreserveNewest" />

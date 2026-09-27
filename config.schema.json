@@ -121,8 +121,8 @@
       "properties": {
         "type": {
           "type": "string",
-          "enum": ["None", "Keystroke", "Launch", "CloseWindow"],
-          "description": "None: no-op (still logged). Keystroke: SendInput with 'keys'. Launch: Process.Start with 'path'/'args'. CloseWindow: posts WM_SYSCOMMAND/SC_CLOSE to the foreground window (the same command Alt+F4 triggers internally) -- more reliable than simulating Alt+F4 for apps like packaged/UWP Calculator that don't always react to a synthetic keypress."
+          "enum": ["None", "Keystroke", "Launch", "CloseWindow", "ShowFavorites"],
+          "description": "None: no-op (still logged). Keystroke: SendInput with 'keys'. Launch: Process.Start with 'path'/'args'. CloseWindow: posts WM_SYSCOMMAND/SC_CLOSE to the foreground window (the same command Alt+F4 triggers internally) -- more reliable than simulating Alt+F4 for apps like packaged/UWP Calculator that don't always react to a synthetic keypress. ShowFavorites: pops up an overlay listing the MyFavorites1-5 buttons' current assignments; only meaningful on the button labeled 'Show Favorites'."
         },
         "keys": {
           "type": "string",

@@ -46,11 +46,11 @@
       "action": { "type": "None" }
     },
     {
-      "name": "FavoritesLegend",
+      "name": "ShowFavorites",
       "reportId": 4,
       "byteOffset": 4,
       "bitMask": "0x10",
-      "action": { "type": "None" }
+      "action": { "type": "ShowFavorites" }
     },
     {
       "name": "F1_Help",
