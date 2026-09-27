@@ -67,11 +67,38 @@ internal sealed class ButtonConfig
         BitMask.StartsWith("0x", StringComparison.OrdinalIgnoreCase) ? BitMask[2..] : BitMask, 16);
 }
 
+internal sealed class MouseButtonDebounceConfig
+{
+    // "left", "right", "middle", "x1", or "x2".
+    [JsonPropertyName("button")] public string Button { get; set; } = "";
+    [JsonPropertyName("enabled")] public bool Enabled { get; set; } = true;
+
+    // In milliseconds.
+    [JsonPropertyName("threshold")] public int Threshold { get; set; } = 30;
+}
+
+internal sealed class MouseDebounceConfig
+{
+    [JsonPropertyName("enabled")] public bool Enabled { get; set; } = false;
+    [JsonPropertyName("buttons")] public List<MouseButtonDebounceConfig> Buttons { get; set; } = new();
+
+    public MouseButtonDebounceConfig? ButtonByIndex(int index)
+    {
+        if (!Enabled) return null;
+        string name = index switch { 0 => "left", 1 => "right", 2 => "middle", 3 => "x1", 4 => "x2", _ => "" };
+        return Buttons.Find(b => string.Equals(b.Button, name, StringComparison.OrdinalIgnoreCase));
+    }
+}
+
 internal sealed class RootConfig
 {
     [JsonPropertyName("device")] public DeviceConfig Device { get; set; } = new();
     [JsonPropertyName("wheel")] public WheelConfig Wheel { get; set; } = new();
     [JsonPropertyName("buttons")] public List<ButtonConfig> Buttons { get; set; } = new();
+
+    // Optional -- default has Enabled=false, so existing config.json files without
+    // this section still deserialize and behave unchanged.
+    [JsonPropertyName("mouseDebounce")] public MouseDebounceConfig MouseDebounce { get; set; } = new();
 
     public static RootConfig Load(string path)
     {

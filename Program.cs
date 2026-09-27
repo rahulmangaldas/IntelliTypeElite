@@ -17,7 +17,10 @@ internal static class Program
         var listener = new HidListener(config);
         listener.Start();
 
-        using var configWatcher = new ConfigWatcher(configPath, listener);
+        using var mouseDebouncer = new MouseDebouncer(config.MouseDebounce);
+        mouseDebouncer.Start();
+
+        using var configWatcher = new ConfigWatcher(configPath, listener, mouseDebouncer);
 
         using var trayIcon = new NotifyIcon
         {
@@ -71,13 +74,15 @@ internal static class Program
 
         string configPath = Path.Combine(configDir, "config.json");
         if (!File.Exists(configPath))
-        {
             File.Copy(Path.Combine(AppContext.BaseDirectory, "config.json"), configPath);
 
-            string schemaSource = Path.Combine(AppContext.BaseDirectory, "config.schema.json");
-            if (File.Exists(schemaSource))
-                File.Copy(schemaSource, Path.Combine(configDir, "config.schema.json"));
-        }
+        // Unlike config.json (user edits, never overwritten), the schema is
+        // app-internal and versioned with the exe -- always refresh it so an
+        // existing install picks up new fields (e.g. mouseDebounce) without the
+        // editor flagging them as unknown.
+        string schemaSource = Path.Combine(AppContext.BaseDirectory, "config.schema.json");
+        if (File.Exists(schemaSource))
+            File.Copy(schemaSource, Path.Combine(configDir, "config.schema.json"), overwrite: true);
 
         return configPath;
     }

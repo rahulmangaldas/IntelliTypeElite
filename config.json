@@ -158,5 +158,15 @@
       "bitMask": "0x08",
       "action": { "type": "Keystroke", "keys": "ctrl+p" }
     }
-  ]
+  ],
+  "mouseDebounce": {
+    "enabled": false,
+    "buttons": [
+      { "button": "left", "enabled": false, "threshold": 30 },
+      { "button": "right", "enabled": false, "threshold": 30 },
+      { "button": "middle", "enabled": false, "threshold": 30 },
+      { "button": "x1", "enabled": false, "threshold": 30 },
+      { "button": "x2", "enabled": false, "threshold": 30 }
+    ]
+  }
 }

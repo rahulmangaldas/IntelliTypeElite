@@ -6,13 +6,15 @@ internal sealed class ConfigWatcher : IDisposable
 {
     private readonly string _path;
     private readonly HidListener _listener;
+    private readonly MouseDebouncer _mouseDebouncer;
     private readonly List<FileSystemWatcher> _watchers = new();
     private readonly System.Threading.Timer _debounce;
 
-    public ConfigWatcher(string path, HidListener listener)
+    public ConfigWatcher(string path, HidListener listener, MouseDebouncer mouseDebouncer)
     {
         _path = path;
         _listener = listener;
+        _mouseDebouncer = mouseDebouncer;
 
         // Editors often touch a file in several steps (truncate, write, rename);
         // debounce so we reload once things settle rather than mid-write.
@@ -64,15 +66,22 @@ internal sealed class ConfigWatcher : IDisposable
 
     private void Reload()
     {
+        RootConfig config;
         try
         {
-            var config = RootConfig.Load(_path);
-            _listener.UpdateConfig(config);
+            config = RootConfig.Load(_path);
         }
         catch (Exception ex)
         {
             Logger.Write($"config.json reload failed, keeping previous config: {ex.Message}");
+            return;
         }
+
+        try { _listener.UpdateConfig(config); }
+        catch (Exception ex) { Logger.Write($"HidListener.UpdateConfig failed: {ex.Message}"); }
+
+        try { _mouseDebouncer.UpdateConfig(config.MouseDebounce); }
+        catch (Exception ex) { Logger.Write($"MouseDebouncer.UpdateConfig failed: {ex.Message}"); }
     }
 
     public void Dispose()

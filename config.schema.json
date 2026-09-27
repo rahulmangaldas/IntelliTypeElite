@@ -49,9 +49,44 @@
     "buttons": {
       "type": "array",
       "items": { "$ref": "#/$defs/button" }
+    },
+    "mouseDebounce": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Suppresses spurious repeat clicks from a worn mouse switch, system-wide -- unrelated to the keyboard's HID buttons above. Optional; omit entirely to leave disabled.",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Master switch for mouse click debounce. Off by default."
+        },
+        "buttons": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/mouseDebounceButton" }
+        }
+      }
     }
   },
   "$defs": {
+    "mouseDebounceButton": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["button"],
+      "properties": {
+        "button": {
+          "type": "string",
+          "enum": ["left", "right", "middle", "x1", "x2"]
+        },
+        "enabled": { "type": "boolean", "default": true },
+        "threshold": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 500,
+          "default": 30,
+          "description": "In milliseconds. Suppress a second click of this button within this many ms of the first, as a hardware-bounce filter. Keep well below GetDoubleClickTime (~500ms default) or real double-clicks get eaten. Tens of ms is typical."
+        }
+      }
+    },
     "button": {
       "type": "object",
       "additionalProperties": false,
