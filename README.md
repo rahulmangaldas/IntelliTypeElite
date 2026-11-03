@@ -20,9 +20,40 @@ Download `IntelliTypeElite.zip` from the [latest release](https://github.com/rah
 
 Edit `config.json`: changes hot-reload, no restart needed. See `config.schema.json` for the schema (JSON aware editors like Visual Studio Code will give you autocomplete and syntax highlighting). Each button supports:
 
-- A default action: `None`, `Keystroke`, `Launch`, or `CloseWindow`
+- A default action: `None`, `Keystroke`, `Launch`, `CloseWindow`, or `Sequence` (a series of keystrokes, typed text and pauses)
 - `appOverrides` — different behavior per app
 - `modifierOverrides` — different behavior when Shift/Ctrl/Alt/Win is held
+- `macAction` — what the button does while your Mac has the keyboard (see below)
+
+## Sharing the keyboard with a Mac (ShareMouse)
+
+If you share this keyboard with a Mac through [ShareMouse](https://www.sharemouse.com/), the app can tell when the Mac has the keyboard and send Mac shortcuts instead. ShareMouse doesn't forward this keyboard's special keys (Back, Forward, Mail, Calculator…) to the Mac, so without this they do nothing there.
+
+Describe your monitor arrangement in `config.json` (omit `layout` to turn Mac mode off):
+
+```json
+"layout": {
+  "monitors": [
+    ["windows:3840x2160", "macos:3840x2160"]
+  ]
+}
+```
+
+Rows run top to bottom and items left to right, as `machine:WxH`. Exactly one `windows` entry (your primary screen) and any number of `macos` entries. `none:25%` is an empty gap, 25% of the first monitor's width in the first row, for monitors that don't line up. Only the relative proportions matter, so use whatever units you like. Mac mode is on while ShareMouse is connected and your cursor is parked on the edge of the PC screen that faces a Mac monitor, which is where ShareMouse leaves it when the mouse crosses over.
+
+Then give buttons a `macAction`. In Mac mode it replaces the button's action and all its overrides; a button without one does nothing. Only `Keystroke`, `Sequence` and `None` work there, since anything else would run on the PC. `cmd` is the Windows key, which ShareMouse maps to Cmd:
+
+```json
+{ "name": "F2_Undo", ..., "macAction": { "type": "Keystroke", "keys": "cmd+z" } },
+{ "name": "Mail", ..., "macAction": { "type": "Sequence", "steps": [
+    { "keys": "cmd+space", "delayMs": 100 },
+    { "text": "mail", "delayMs": 100 },
+    { "keys": "enter" } ] } }
+```
+
+The second one launches a Mac app through Spotlight. Raise the `delayMs` values if Spotlight drops letters. A sequence stops if you move the cursor back to the PC partway through, and a second press while one is running is ignored.
+
+Keys accepted in `keys` include `ctrl`, `alt`, `shift`, `win`/`cmd`, `enter`, `space`, `tab`, `esc`, `backspace`, `delete`, the arrow, `home`/`end` and `pageup`/`pagedown` keys, `[`, `]`, letters, digits and `F1`–`F24`. An unrecognized key sends nothing rather than part of the combo.
 
 ## Logging
 
