@@ -31,11 +31,12 @@ internal static class Program
             Visible = true,
         };
 
-        var menu = new ContextMenuStrip();
+        var menu = new ContextMenuStrip { Renderer = new DeadRowRenderer() };
         menu.Opening += (_, _) => RefreshMouseDebounceStatus(menu, mouseDebouncer);
 
         menu.Items.Add("Open config", null, (_, _) =>
             Process.Start(new ProcessStartInfo(configPath) { UseShellExecute = true }));
+        menu.Items.Add(new ToolStripSeparator());
         if (Logger.Enabled)
         {
             menu.Items.Add("Open log", null, (_, _) =>
@@ -51,6 +52,19 @@ internal static class Program
             Application.Exit();
         });
         trayIcon.ContextMenuStrip = menu;
+
+        // WinForms quirk: a ContextMenuStrip shown from a NotifyIcon decides whether to
+        // flip itself above the click point (to clear the taskbar) based on its own
+        // already-computed size, but it has no real size/native handle until its first
+        // layout pass -- which only happens as part of being shown. Without this, the
+        // very first real right-click opens flush against the bottom of the screen
+        // (behind the taskbar); every later one flips correctly. Showing the fully
+        // populated menu off-screen once, then immediately closing it, forces that
+        // layout/handle-creation cycle before the user ever triggers a real one. This
+        // goes through Opening (like a real Show), so the warm-up reflects the menu's
+        // true height, not just its base items.
+        menu.Show(new Point(-9999, -9999));
+        menu.Close();
 
         // Only installed once a window handle exists (the NotifyIcon's, created above) --
         // capturing it any earlier (e.g. right after ApplicationConfiguration.Initialize())
@@ -134,24 +148,36 @@ internal static class Program
             menu.Items.Insert(i, rows[i]);
     }
 
-    // ToolStripLabel, not ToolStripMenuItem -- a disabled ToolStripMenuItem still
-    // participates in mouse hover/selection in the default renderer (grey text, but
-    // still highlights); ToolStripLabel is never selectable, so it renders as a
-    // completely dead row, like the separator below it. ToolStripLabel's own default
-    // padding is tighter than a menu item's, which is what made these rows look
-    // crowded next to "Open config"/"Open log"/"Exit" -- match that vertical padding
-    // explicitly. indent nests a row (a per-button line, or the "no buttons enabled"
-    // fallback that stands in for the button list) under the "Mouse debounce"/"Off"
-    // header rows, which stay at the base indent.
-    private static ToolStripLabel MakeStatusRow(string text, bool indent = false) =>
-        new(text)
-        {
-            Enabled = false,
-            Tag = MouseDebounceStatusTag,
-            Padding = new Padding(indent ? 20 : 4, 3, 4, 3),
-        };
+    // A real ToolStripMenuItem, not a ToolStripLabel -- using the same control type as
+    // "Open config"/"Open log"/"Exit" is what guarantees identical text alignment,
+    // rather than trying to hand-match a different control's padding to theirs.
+    // Enabled = false alone still lets the default renderer paint a hover-highlight
+    // box around it though, so staying fully inert relies on DeadRowRenderer below.
+    //
+    // indent nests a row (a per-button line, or the "no buttons enabled" fallback
+    // that stands in for the button list) under the "Mouse debounce"/"Off" header
+    // rows -- via a leading-space text prefix, not Padding. ToolStripMenuItem reserves
+    // a fixed icon/checkmark gutter before the text, so its text actually starts at
+    // max(Padding.Left, thatGutterWidth): a small Padding.Left increase on top of the
+    // default gets absorbed into the gutter and produces no visible shift at all.
+    private static ToolStripMenuItem MakeStatusRow(string text, bool indent = false) =>
+        new(indent ? "      " + text : text) { Enabled = false, Tag = MouseDebounceStatusTag };
 
     // "left"/"right"/"middle" -> "Left"/"Right"/"Middle"; "x1"/"x2" -> "X1"/"X2".
     private static string DescribeButton(string button) =>
         button.Length == 2 ? button.ToUpperInvariant() : char.ToUpperInvariant(button[0]) + button[1..];
+
+    // Suppresses the hover/selection highlight box the default renderer would
+    // otherwise still draw around a disabled ToolStripMenuItem -- applied only to
+    // items tagged as part of the mouse-debounce status block, so they read as fully
+    // inert while everything else in the menu (Open config, Open log, Exit) keeps its
+    // normal highlight.
+    private sealed class DeadRowRenderer : ToolStripProfessionalRenderer
+    {
+        protected override void OnRenderMenuItemBackground(ToolStripItemRenderEventArgs e)
+        {
+            if (e.Item.Tag as string == MouseDebounceStatusTag) return;
+            base.OnRenderMenuItemBackground(e);
+        }
+    }
 }
