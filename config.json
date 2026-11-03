@@ -73,7 +73,7 @@
       "reportId": 4,
       "byteOffset": 3,
       "bitMask": "0x01",
-      "macAction": { "type": "Sequence", "steps": [ { "keys": "cmd+space", "delayMs": 300 }, { "text": "calculator", "delayMs": 250 }, { "keys": "enter" } ] },
+      "macAction": { "type": "Sequence", "steps": [ { "keys": "cmd+space", "delayMs": 100 }, { "text": "calculator", "delayMs": 100 }, { "keys": "enter" } ] },
       "action": { "type": "None" }
     },
     {
@@ -116,7 +116,7 @@
       "reportId": 4,
       "byteOffset": 3,
       "bitMask": "0x80",
-      "macAction": { "type": "Sequence", "steps": [ { "keys": "cmd+space", "delayMs": 300 }, { "text": "mail", "delayMs": 250 }, { "keys": "enter" } ] },
+      "macAction": { "type": "Sequence", "steps": [ { "keys": "cmd+space", "delayMs": 100 }, { "text": "mail", "delayMs": 100 }, { "keys": "enter" } ] },
       "action": { "type": "None" }
     },
     {
@@ -124,7 +124,7 @@
       "reportId": 4,
       "byteOffset": 3,
       "bitMask": "0x08",
-      "macAction": { "type": "Sequence", "steps": [ { "keys": "cmd+space", "delayMs": 300 }, { "text": "safari", "delayMs": 250 }, { "keys": "enter" } ] },
+      "macAction": { "type": "Sequence", "steps": [ { "keys": "cmd+space", "delayMs": 100 }, { "text": "safari", "delayMs": 100 }, { "keys": "enter" } ] },
       "action": { "type": "None" }
     },
     {
