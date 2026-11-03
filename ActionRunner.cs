@@ -46,10 +46,6 @@ internal sealed class ActionRunner
     private const uint KEYEVENTF_KEYUP = 0x0002;
     private const uint KEYEVENTF_EXTENDEDKEY = 0x0001;
 
-    // Pause between typed characters of a Sequence "text" step, so the receiving app
-    // (Spotlight, via ShareMouse) isn't flooded.
-    private const int TypeDelayMs = 15;
-
     // 1 while a Sequence is running; a second press is ignored until it finishes.
     private int _sequenceRunning;
 
@@ -365,7 +361,6 @@ internal sealed class ActionRunner
                         {
                             if (!StillValid(buttonName, stillValid)) return;
                             SendKeystroke(c == ' ' ? "space" : c.ToString());
-                            await Task.Delay(TypeDelayMs);
                         }
                     }
 
