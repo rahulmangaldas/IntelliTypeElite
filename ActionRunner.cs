@@ -44,6 +44,14 @@ internal sealed class ActionRunner
     private const uint INPUT_KEYBOARD = 1;
     private const uint MOUSEEVENTF_WHEEL = 0x0800;
     private const uint KEYEVENTF_KEYUP = 0x0002;
+    private const uint KEYEVENTF_EXTENDEDKEY = 0x0001;
+
+    // Pause between typed characters of a Sequence "text" step, so the receiving app
+    // (Spotlight, via ShareMouse) isn't flooded.
+    private const int TypeDelayMs = 15;
+
+    // 1 while a Sequence is running; a second press is ignored until it finishes.
+    private int _sequenceRunning;
 
     [DllImport("user32.dll", SetLastError = true)]
     private static extern uint SendInput(uint nInputs, INPUT[] pInputs, int cbSize);
@@ -81,9 +89,39 @@ internal sealed class ActionRunner
 
     public void Execute(ButtonConfig button, RootConfig config)
     {
-        var action = ResolveAction(button);
+        ActionConfig action;
+        Func<bool>? stillMac = null;
+        if (config.MacMode.IsMacActive())
+        {
+            // A Sequence takes a while; this lets it stop if the cursor comes back to
+            // the PC mid-run, so the remaining keys don't land in a Windows window.
+            stillMac = () => config.MacMode.IsMacActive();
+
+            // The Mac has the keyboard: skip the PC-side resolution entirely (app and
+            // modifier overrides describe the Windows foreground app) and only run
+            // things that make sense there. Launch/CloseWindow/ShowFavorites would act
+            // on this PC, so they're ignored, as is a button with no macAction.
+            var macAction = button.MacAction;
+            if (macAction is null || macAction.Type is not ("Keystroke" or "Sequence" or "None"))
+            {
+                Logger.Write($"{button.Name}: Mac mode, no usable macAction -- ignored");
+                return;
+            }
+
+            Logger.Write($"{button.Name}: Mac mode");
+            action = macAction;
+        }
+        else
+        {
+            action = ResolveAction(button);
+        }
+
         switch (action.Type)
         {
+            case "Sequence":
+                RunSequence(button.Name, action, stillMac);
+                break;
+
             case "ShowFavorites":
                 ShowFavorites(config);
                 Logger.Write($"{button.Name}: showed favorites overlay");
@@ -256,36 +294,138 @@ internal sealed class ActionRunner
     private static void SendKeystroke(string combo)
     {
         var parts = combo.Split('+', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        var vks = parts.Select(ToVirtualKey).Where(vk => vk != 0).ToList();
+        var vks = parts.Select(ToVirtualKey).ToList();
         if (vks.Count == 0) return;
 
+        // A token that isn't a known key (typo, unsupported key) used to be dropped and the
+        // rest sent anyway -- "cmd+spcae" became a bare Win tap. Send nothing instead.
+        if (vks.Contains(0))
+        {
+            Logger.Write($"Unknown key in '{combo}' -- nothing sent");
+            return;
+        }
+
+        // Navigation keys must carry the extended-key flag, otherwise Windows treats them
+        // as their numpad twins (Left -> Numpad4, etc.).
         var downs = vks.Select(vk => new INPUT
         {
             type = INPUT_KEYBOARD,
-            u = new InputUnion { ki = new KEYBDINPUT { wVk = vk } }
+            u = new InputUnion { ki = new KEYBDINPUT { wVk = vk, dwFlags = IsExtendedKey(vk) ? KEYEVENTF_EXTENDEDKEY : 0 } }
         });
         var ups = ((IEnumerable<ushort>)vks).Reverse().Select(vk => new INPUT
         {
             type = INPUT_KEYBOARD,
-            u = new InputUnion { ki = new KEYBDINPUT { wVk = vk, dwFlags = KEYEVENTF_KEYUP } }
+            u = new InputUnion { ki = new KEYBDINPUT { wVk = vk, dwFlags = KEYEVENTF_KEYUP | (IsExtendedKey(vk) ? KEYEVENTF_EXTENDEDKEY : 0) } }
         });
 
         var sequence = downs.Concat(ups).ToArray();
         SendInput((uint)sequence.Length, sequence, Marshal.SizeOf<INPUT>());
     }
 
-    private static ushort ToVirtualKey(string key) => key.ToLowerInvariant() switch
+    // PageUp/PageDown/End/Home/Left/Up/Right/Down (0x21-0x28), Insert, Delete.
+    private static bool IsExtendedKey(ushort vk) => vk is >= 0x21 and <= 0x28 or 0x2D or 0x2E;
+
+    // Runs a "Sequence" action's steps on a background task, so the HID reader thread
+    // (which calls Execute while holding a lock) isn't blocked by the delays. Only one
+    // sequence runs at a time; a press while one is running is ignored.
+    //
+    // stillValid (Mac mode only) is re-checked before every step and typed character; the
+    // sequence is abandoned the first time it returns false.
+    private void RunSequence(string buttonName, ActionConfig action, Func<bool>? stillValid)
     {
-        "ctrl" or "control" => 0x11,
-        "alt" => 0x12,
-        "shift" => 0x10,
-        "win" or "windows" => 0x5B,
-        "esc" or "escape" => 0x1B,
-        "tab" => 0x09,
-        "enter" or "return" => 0x0D,
-        "space" => 0x20,
-        _ when key.Length == 1 && char.IsLetterOrDigit(key[0]) => (ushort)char.ToUpperInvariant(key[0]),
-        _ when key.StartsWith('f') && int.TryParse(key.AsSpan(1), out int fn) && fn is >= 1 and <= 24 => (ushort)(0x70 + fn - 1),
-        _ => 0,
-    };
+        if (action.Steps is not { Count: > 0 })
+        {
+            Logger.Write($"{buttonName}: sequence has no steps");
+            return;
+        }
+
+        if (Interlocked.CompareExchange(ref _sequenceRunning, 1, 0) != 0)
+        {
+            Logger.Write($"{buttonName}: a sequence is already running -- ignored");
+            return;
+        }
+
+        // Snapshot, so a config hot reload can't change the steps mid-run.
+        var steps = action.Steps.ToList();
+
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                foreach (var step in steps)
+                {
+                    if (!StillValid(buttonName, stillValid)) return;
+
+                    if (!string.IsNullOrWhiteSpace(step.Keys))
+                        SendKeystroke(step.Keys);
+
+                    if (!string.IsNullOrEmpty(step.Text))
+                    {
+                        foreach (char c in step.Text)
+                        {
+                            if (!StillValid(buttonName, stillValid)) return;
+                            SendKeystroke(c == ' ' ? "space" : c.ToString());
+                            await Task.Delay(TypeDelayMs);
+                        }
+                    }
+
+                    if (step.DelayMs is > 0)
+                        await Task.Delay(step.DelayMs.Value);
+                }
+
+                Logger.Write($"{buttonName}: sequence finished ({steps.Count} steps)");
+            }
+            catch (Exception ex)
+            {
+                Logger.Write($"{buttonName}: sequence failed: {ex.Message}");
+            }
+            finally
+            {
+                Volatile.Write(ref _sequenceRunning, 0);
+            }
+        });
+    }
+
+    private static bool StillValid(string buttonName, Func<bool>? stillValid)
+    {
+        if (stillValid is null || stillValid()) return true;
+
+        Logger.Write($"{buttonName}: sequence abandoned (the Mac is no longer active)");
+        return false;
+    }
+
+    private static ushort ToVirtualKey(string key)
+    {
+        string k = key.ToLowerInvariant();
+        return k switch
+        {
+            "ctrl" or "control" => 0x11,
+            "alt" => 0x12,
+            "shift" => 0x10,
+            // "cmd" = the Windows key: ShareMouse maps Win to Cmd on the Mac.
+            "win" or "windows" or "cmd" or "command" => 0x5B,
+            "esc" or "escape" => 0x1B,
+            "tab" => 0x09,
+            "enter" or "return" => 0x0D,
+            "space" => 0x20,
+            "backspace" => 0x08,
+            "delete" or "del" => 0x2E,
+            "insert" => 0x2D,
+            "home" => 0x24,
+            "end" => 0x23,
+            "pageup" => 0x21,
+            "pagedown" => 0x22,
+            "left" => 0x25,
+            "up" => 0x26,
+            "right" => 0x27,
+            "down" => 0x28,
+            "[" => 0xDB,
+            "]" => 0xDD,
+            // ASCII only: char.IsLetterOrDigit would also accept e.g. 'é', whose upper-case
+            // code point is not a meaningful virtual-key code.
+            _ when k.Length == 1 && k[0] is (>= 'a' and <= 'z') or (>= '0' and <= '9') => (ushort)char.ToUpperInvariant(k[0]),
+            _ when k.StartsWith('f') && int.TryParse(k.AsSpan(1), out int fn) && fn is >= 1 and <= 24 => (ushort)(0x70 + fn - 1),
+            _ => 0,
+        };
+    }
 }

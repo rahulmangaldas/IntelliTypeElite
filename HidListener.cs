@@ -126,7 +126,18 @@ internal sealed class HidListener
                 // fall back to "not pressed" for a button that no longer exists.
                 bool wasPressed = _buttonState.TryGetValue(button.Name, out var prev) && prev;
                 if (pressed && !wasPressed)
-                    _actions.Execute(button, config);
+                {
+                    // Run() only guards stream.Read, so anything thrown here would end this
+                    // collection's reader thread for the rest of the session.
+                    try
+                    {
+                        _actions.Execute(button, config);
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Write($"{button.Name}: action failed: {ex.Message}");
+                    }
+                }
                 _buttonState[button.Name] = pressed;
             }
         }

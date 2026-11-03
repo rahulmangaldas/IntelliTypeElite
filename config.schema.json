@@ -50,6 +50,27 @@
       "type": "array",
       "items": { "$ref": "#/$defs/button" }
     },
+    "layout": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["monitors"],
+      "description": "Optional. Your ShareMouse monitor arrangement, so the app can tell when the Mac is active: the Windows cursor parks on the PC-screen edge facing the Mac, and a macAction is used while it's there. Omit to disable Mac mode.",
+      "properties": {
+        "monitors": {
+          "type": "array",
+          "minItems": 1,
+          "description": "Rows, top to bottom; each row lists items left to right. Exactly one \"windows\" monitor (this PC's primary screen). Rows stack directly: a row starts where the tallest monitor of the row above ends.",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^(?:(?:windows|macos):[0-9]+(?:\\.[0-9]+)?[xX*][0-9]+(?:\\.[0-9]+)?|none:[0-9]+(?:\\.[0-9]+)?%)$",
+              "description": "\"windows:3840x2160\" or \"macos:3840x2160\" (x, X or * as the separator), or \"none:25%\": an inline empty gap, 25% of the first monitor's width in the first row, pushing the next item right."
+            }
+          }
+        }
+      }
+    },
     "mouseDebounce": {
       "type": "object",
       "additionalProperties": false,
@@ -112,6 +133,10 @@
           "description": "Single-bit mask within the byte at byteOffset, e.g. \"0x20\"."
         },
         "action": { "$ref": "#/$defs/action" },
+        "macAction": {
+          "description": "Used instead of 'action' and every override while the Mac is the active ShareMouse machine (see 'layout'). Only Keystroke, Sequence and None are honored; a button without a macAction does nothing in Mac mode.",
+          "allOf": [{ "$ref": "#/$defs/action" }]
+        },
         "modifierOverrides": {
           "type": "array",
           "description": "Checked when no appOverrides entry matches the foreground app.",
@@ -156,12 +181,18 @@
       "properties": {
         "type": {
           "type": "string",
-          "enum": ["None", "Keystroke", "Launch", "CloseWindow", "ShowFavorites"],
-          "description": "None: no-op (still logged). Keystroke: SendInput with 'keys'. Launch: Process.Start with 'path'/'args'. CloseWindow: posts WM_SYSCOMMAND/SC_CLOSE to the foreground window (the same command Alt+F4 triggers internally) -- more reliable than simulating Alt+F4 for apps like packaged/UWP Calculator that don't always react to a synthetic keypress. ShowFavorites: pops up an overlay listing the MyFavorites1-5 buttons' current assignments; only meaningful on the button labeled 'Show Favorites'."
+          "enum": ["None", "Keystroke", "Launch", "CloseWindow", "ShowFavorites", "Sequence"],
+          "description": "None: no-op (still logged). Keystroke: SendInput with 'keys'. Sequence: runs 'steps' in order on a background task (keystrokes, typed text, pauses); one sequence at a time, a press while one runs is ignored. Launch: Process.Start with 'path'/'args'. CloseWindow: posts WM_SYSCOMMAND/SC_CLOSE to the foreground window (the same command Alt+F4 triggers internally) -- more reliable than simulating Alt+F4 for apps like packaged/UWP Calculator that don't always react to a synthetic keypress. ShowFavorites: pops up an overlay listing the MyFavorites1-5 buttons' current assignments; only meaningful on the button labeled 'Show Favorites'."
         },
         "keys": {
           "type": "string",
-          "description": "Only used when type is \"Keystroke\". '+'-joined combo, e.g. \"ctrl+shift+t\" or a single key like \"F5\". Supports ctrl/control, alt, shift, win/windows, esc/escape, tab, enter/return, space, single letters/digits, and F1-F24."
+          "description": "Only used when type is \"Keystroke\". '+'-joined combo, e.g. \"ctrl+shift+t\" or a single key like \"F5\". Supports ctrl/control, alt, shift, win/windows, cmd/command (the Windows key, which ShareMouse maps to Cmd on the Mac), esc/escape, tab, enter/return, space, backspace, delete, insert, home, end, pageup, pagedown, left/right/up/down, [ and ], single letters/digits, and F1-F24."
+        },
+        "steps": {
+          "type": "array",
+          "minItems": 1,
+          "description": "Only used when type is \"Sequence\". Run in order, e.g. cmd+space, wait, type an app name, wait, enter -- launches a Mac app via Spotlight.",
+          "items": { "$ref": "#/$defs/step" }
         },
         "path": {
           "type": "string",
@@ -180,8 +211,34 @@
         {
           "if": { "properties": { "type": { "const": "Launch" } } },
           "then": { "required": ["path"] }
+        },
+        {
+          "if": { "properties": { "type": { "const": "Sequence" } } },
+          "then": { "required": ["steps"] }
         }
       ]
+    },
+    "step": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "One step of a Sequence. A step may set several of these; they run in the order keys, text, delayMs.",
+      "properties": {
+        "keys": {
+          "type": "string",
+          "description": "Same combo syntax as a Keystroke action's 'keys', e.g. \"cmd+space\"."
+        },
+        "text": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9 ]+$",
+          "description": "Typed one key at a time. Letters, digits and spaces only (no shift, no punctuation); sent lowercase."
+        },
+        "delayMs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5000,
+          "description": "Pause after this step, in milliseconds. Spotlight needs roughly 300ms to open before typing and ~250ms before Return."
+        }
+      }
     }
   }
 }

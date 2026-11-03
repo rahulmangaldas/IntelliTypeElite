@@ -26,11 +26,27 @@ internal sealed class ActionConfig
 {
     // "None" (log only), "Keystroke" (SendInput), "Launch" (Process.Start),
     // "CloseWindow" (WM_SYSCOMMAND/SC_CLOSE), "ShowFavorites" (pops up an overlay listing
-    // the MyFavorites1-5 buttons' current assignments).
+    // the MyFavorites1-5 buttons' current assignments), "Sequence" (runs `steps` in order:
+    // keystrokes, typed text and pauses -- e.g. launching a Mac app via Spotlight).
     [JsonPropertyName("type")] public string Type { get; set; } = "None";
     [JsonPropertyName("keys")] public string? Keys { get; set; }
     [JsonPropertyName("path")] public string? Path { get; set; }
     [JsonPropertyName("args")] public string? Args { get; set; }
+    [JsonPropertyName("steps")] public List<ActionStep>? Steps { get; set; }
+}
+
+// One step of a "Sequence" action. A step may set any of the three; they run in the
+// order keys -> text -> delayMs.
+internal sealed class ActionStep
+{
+    // Same combo syntax as a Keystroke action, e.g. "cmd+space".
+    [JsonPropertyName("keys")] public string? Keys { get; set; }
+
+    // Typed one key at a time (letters, digits and spaces only; no shift).
+    [JsonPropertyName("text")] public string? Text { get; set; }
+
+    // Pause after this step, in milliseconds.
+    [JsonPropertyName("delayMs")] public int? DelayMs { get; set; }
 }
 
 internal sealed class ModifierOverride
@@ -54,6 +70,11 @@ internal sealed class ButtonConfig
     [JsonPropertyName("byteOffset")] public int ByteOffset { get; set; }
     [JsonPropertyName("bitMask")] public string BitMask { get; set; } = "0x00";
     [JsonPropertyName("action")] public ActionConfig Action { get; set; } = new();
+
+    // Used instead of `action` (and instead of every override) while the Mac is the
+    // active ShareMouse machine -- see MacModeDetector. Only Keystroke, Sequence and None
+    // are honored there; a button without one does nothing in Mac mode.
+    [JsonPropertyName("macAction")] public ActionConfig? MacAction { get; set; }
 
     // Checked when no appOverride matches the foreground app.
     [JsonPropertyName("modifierOverrides")] public List<ModifierOverride>? ModifierOverrides { get; set; }
@@ -90,6 +111,15 @@ internal sealed class MouseDebounceConfig
     }
 }
 
+internal sealed class LayoutConfig
+{
+    // Absolute monitor layout shared with ShareMouse: rows top to bottom, items left to
+    // right. Each item is "machine:WxH" (machine = windows or macos; "x" or "*" both
+    // work) or "none:N%", an inline empty gap N% of the first monitor's width in the
+    // first row. Example: [["windows:3840x2160", "macos:3840x2160"], ["none:25%", "macos:1920x1080"]]
+    [JsonPropertyName("monitors")] public List<List<string>> Monitors { get; set; } = new();
+}
+
 internal sealed class RootConfig
 {
     [JsonPropertyName("device")] public DeviceConfig Device { get; set; } = new();
@@ -99,6 +129,15 @@ internal sealed class RootConfig
     // Optional -- default has Enabled=false, so existing config.json files without
     // this section still deserialize and behave unchanged.
     [JsonPropertyName("mouseDebounce")] public MouseDebounceConfig MouseDebounce { get; set; } = new();
+
+    // Optional -- absent means Mac mode is never detected.
+    [JsonPropertyName("layout")] public LayoutConfig? Layout { get; set; }
+
+    // Built lazily and cached for this config instance (a hot reload swaps in a new
+    // RootConfig, so it is rebuilt from the new layout). Racing threads at worst build
+    // it twice.
+    private MacModeDetector? _macMode;
+    [JsonIgnore] public MacModeDetector MacMode => _macMode ??= new MacModeDetector(Layout);
 
     public static RootConfig Load(string path)
     {

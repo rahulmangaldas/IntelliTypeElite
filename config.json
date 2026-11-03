@@ -53,6 +53,88 @@
       "action": { "type": "ShowFavorites" }
     },
     {
+      "name": "Back",
+      "reportId": 4,
+      "byteOffset": 5,
+      "bitMask": "0x04",
+      "macAction": { "type": "Keystroke", "keys": "cmd+[" },
+      "action": { "type": "None" }
+    },
+    {
+      "name": "Forward",
+      "reportId": 4,
+      "byteOffset": 5,
+      "bitMask": "0x08",
+      "macAction": { "type": "Keystroke", "keys": "cmd+]" },
+      "action": { "type": "None" }
+    },
+    {
+      "name": "Calculator",
+      "reportId": 4,
+      "byteOffset": 3,
+      "bitMask": "0x01",
+      "macAction": { "type": "Sequence", "steps": [ { "keys": "cmd+space", "delayMs": 300 }, { "text": "calculator", "delayMs": 250 }, { "keys": "enter" } ] },
+      "action": { "type": "None" }
+    },
+    {
+      "name": "LogOff",
+      "reportId": 4,
+      "byteOffset": 3,
+      "bitMask": "0x02",
+      "action": { "type": "None" }
+    },
+    {
+      "name": "Sleep",
+      "reportId": 5,
+      "byteOffset": 1,
+      "bitMask": "0x02",
+      "action": { "type": "None" }
+    },
+    {
+      "name": "MyDocuments",
+      "reportId": 4,
+      "byteOffset": 4,
+      "bitMask": "0x02",
+      "action": { "type": "Launch", "path": "explorer.exe", "args": "shell:Personal" }
+    },
+    {
+      "name": "MyPictures",
+      "reportId": 4,
+      "byteOffset": 4,
+      "bitMask": "0x04",
+      "action": { "type": "Launch", "path": "explorer.exe", "args": "shell:My Pictures" }
+    },
+    {
+      "name": "MyMusic",
+      "reportId": 4,
+      "byteOffset": 4,
+      "bitMask": "0x08",
+      "action": { "type": "Launch", "path": "explorer.exe", "args": "shell:My Music" }
+    },
+    {
+      "name": "Mail",
+      "reportId": 4,
+      "byteOffset": 3,
+      "bitMask": "0x80",
+      "macAction": { "type": "Sequence", "steps": [ { "keys": "cmd+space", "delayMs": 300 }, { "text": "mail", "delayMs": 250 }, { "keys": "enter" } ] },
+      "action": { "type": "None" }
+    },
+    {
+      "name": "WebHome",
+      "reportId": 4,
+      "byteOffset": 3,
+      "bitMask": "0x08",
+      "macAction": { "type": "Sequence", "steps": [ { "keys": "cmd+space", "delayMs": 300 }, { "text": "safari", "delayMs": 250 }, { "keys": "enter" } ] },
+      "action": { "type": "None" }
+    },
+    {
+      "name": "Messenger",
+      "reportId": 4,
+      "byteOffset": 4,
+      "bitMask": "0x01",
+      "action": { "type": "None" }
+    },
+    {
       "name": "F1_Help",
       "reportId": 4,
       "byteOffset": 3,
@@ -64,6 +146,7 @@
       "reportId": 4,
       "byteOffset": 2,
       "bitMask": "0x01",
+      "macAction": { "type": "Keystroke", "keys": "cmd+z" },
       "action": { "type": "Keystroke", "keys": "ctrl+z" }
     },
     {
@@ -71,6 +154,7 @@
       "reportId": 4,
       "byteOffset": 2,
       "bitMask": "0x02",
+      "macAction": { "type": "Keystroke", "keys": "cmd+shift+z" },
       "action": { "type": "Keystroke", "keys": "ctrl+y" }
     },
     {
@@ -78,6 +162,7 @@
       "reportId": 4,
       "byteOffset": 2,
       "bitMask": "0x80",
+      "macAction": { "type": "Keystroke", "keys": "cmd+n" },
       "action": { "type": "Keystroke", "keys": "ctrl+n" }
     },
     {
@@ -85,6 +170,7 @@
       "reportId": 4,
       "byteOffset": 2,
       "bitMask": "0x10",
+      "macAction": { "type": "Keystroke", "keys": "cmd+o" },
       "action": { "type": "Keystroke", "keys": "ctrl+o" }
     },
     {
@@ -92,6 +178,7 @@
       "reportId": 4,
       "byteOffset": 2,
       "bitMask": "0x20",
+      "macAction": { "type": "Keystroke", "keys": "cmd+w" },
       "action": { "type": "CloseWindow" },
       "appOverrides": {
         "winword": { "action": { "type": "Keystroke", "keys": "ctrl+w" } },
@@ -149,6 +236,7 @@
       "reportId": 4,
       "byteOffset": 2,
       "bitMask": "0x40",
+      "macAction": { "type": "Keystroke", "keys": "cmd+s" },
       "action": { "type": "Keystroke", "keys": "ctrl+s" }
     },
     {
@@ -156,6 +244,7 @@
       "reportId": 4,
       "byteOffset": 2,
       "bitMask": "0x08",
+      "macAction": { "type": "Keystroke", "keys": "cmd+p" },
       "action": { "type": "Keystroke", "keys": "ctrl+p" }
     }
   ],
