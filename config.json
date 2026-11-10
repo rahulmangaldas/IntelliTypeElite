@@ -257,5 +257,13 @@
       { "button": "x1", "enabled": false, "threshold": 30 },
       { "button": "x2", "enabled": false, "threshold": 30 }
     ]
+  },
+  "fileUnblocker": {
+    "enabled": false,
+    "folders": [ "%USERPROFILE%\\Downloads" ],
+    "includeSubfolders": true,
+    "settleMs": 1500,
+    "sweepOnStart": true,
+    "sweepIntervalMinutes": 120
   }
 }

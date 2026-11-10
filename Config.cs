@@ -111,6 +111,45 @@ internal sealed class MouseDebounceConfig
     }
 }
 
+// Strips the Mark of the Web (Zone.Identifier stream) from "safe" file types (documents
+// the user opens a lot, plus media) in the listed folders, so Windows stops warning about
+// files downloaded from the internet. Anything not in `extensions` (executables, scripts,
+// Office files, archives...) keeps its mark.
+internal sealed class FileUnblockerConfig
+{
+    [JsonPropertyName("enabled")] public bool Enabled { get; set; } = false;
+
+    // %VAR% references are expanded. Folders reached through a junction are resolved to
+    // their real path. Junctions *inside* a watched folder are not followed.
+    [JsonPropertyName("folders")] public List<string> Folders { get; set; } = new();
+
+    // With or without the leading dot; case-insensitive.
+    [JsonPropertyName("extensions")] public List<string> Extensions { get; set; } = new()
+    {
+        // documents and images
+        ".pdf", ".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp", ".heic", ".heif", ".avif",
+        ".tif", ".tiff", ".dng", ".cr2", ".nef", ".arw",
+        // video
+        ".mp4", ".m4v", ".mov", ".avi", ".mkv", ".webm", ".wmv", ".mpg", ".mpeg", ".3gp",
+        ".mts", ".m2ts",
+        // audio
+        ".mp3", ".m4a", ".aac", ".wav", ".flac", ".ogg", ".oga", ".opus", ".wma", ".aiff",
+        ".aif", ".mid", ".midi",
+    };
+
+    [JsonPropertyName("includeSubfolders")] public bool IncludeSubfolders { get; set; } = true;
+
+    // In milliseconds: how long a new/renamed file must be quiet before it is touched
+    // (browsers write the file, rename it, then stamp the mark).
+    [JsonPropertyName("settleMs")] public int SettleMs { get; set; } = 1500;
+
+    // A full pass over every folder. The watcher can miss events (buffer overflow, a
+    // watched folder deleted and recreated), so this is the safety net. Values are clamped
+    // on load: settleMs 0..60000, sweepIntervalMinutes 0..10080.
+    [JsonPropertyName("sweepOnStart")] public bool SweepOnStart { get; set; } = true;
+    [JsonPropertyName("sweepIntervalMinutes")] public int SweepIntervalMinutes { get; set; } = 120;
+}
+
 internal sealed class LayoutConfig
 {
     // Absolute monitor layout shared with ShareMouse: rows top to bottom, items left to
@@ -129,6 +168,9 @@ internal sealed class RootConfig
     // Optional -- default has Enabled=false, so existing config.json files without
     // this section still deserialize and behave unchanged.
     [JsonPropertyName("mouseDebounce")] public MouseDebounceConfig MouseDebounce { get; set; } = new();
+
+    // Optional -- default has Enabled=false, same reasoning as mouseDebounce.
+    [JsonPropertyName("fileUnblocker")] public FileUnblockerConfig FileUnblocker { get; set; } = new();
 
     // Optional -- absent means Mac mode is never detected.
     [JsonPropertyName("layout")] public LayoutConfig? Layout { get; set; }

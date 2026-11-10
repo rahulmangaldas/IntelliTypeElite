@@ -15,9 +15,17 @@ internal static class Logger
         if (!Enabled) return;
 
         string line = $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} {message}";
-        lock (Lock)
+        // Logging must never take the app down: it is called from threadpool callbacks where
+        // an escaping exception (e.g. another process holding the log open) ends the process.
+        try
         {
-            File.AppendAllText(Path, line + Environment.NewLine);
+            lock (Lock)
+            {
+                File.AppendAllText(Path, line + Environment.NewLine);
+            }
+        }
+        catch (Exception)
+        {
         }
     }
 }

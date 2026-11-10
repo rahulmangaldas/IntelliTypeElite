@@ -86,6 +86,51 @@
           "items": { "$ref": "#/$defs/mouseDebounceButton" }
         }
       }
+    },
+    "fileUnblocker": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Removes the Mark of the Web (Zone.Identifier) from safe file types (documents, images, video, audio) in the listed folders, in real time plus a periodic sweep, so Windows stops warning about downloaded files. Types not in 'extensions' (executables, scripts, Office files, archives) keep their mark. Optional; omit entirely to leave disabled.",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Master switch. Off by default."
+        },
+        "folders": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [],
+          "description": "Folders to watch. %VAR% references are expanded (e.g. \"%USERPROFILE%\\\\Downloads\"). A folder reached through a junction is resolved to its real path. Junctions inside a watched folder are not followed."
+        },
+        "extensions": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "File extensions to unblock, with or without the leading dot, case-insensitive. Defaults to common document, image, video and audio types when omitted. Specifying the list replaces the default."
+        },
+        "includeSubfolders": {
+          "type": "boolean",
+          "default": true,
+          "description": "Also watch and sweep subfolders."
+        },
+        "settleMs": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 1500,
+          "description": "Milliseconds a new or renamed file must be quiet before it is processed (browsers write the file, rename it, then stamp the mark)."
+        },
+        "sweepOnStart": {
+          "type": "boolean",
+          "default": true,
+          "description": "Run a full pass over every folder at startup and whenever this section changes. The watcher can miss events, so sweeps are the safety net."
+        },
+        "sweepIntervalMinutes": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 120,
+          "description": "Run a full pass every N minutes. 0 disables the periodic sweep."
+        }
+      }
     }
   },
   "$defs": {

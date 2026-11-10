@@ -81,6 +81,37 @@ wanted later.
 Disabled by default — `IntelliTypeElite.exe` only writes `IntelliTypeElite.log` (and
 shows the tray "Open log" menu item) when launched with `/log`.
 
+## File unblocker
+`FileUnblocker.cs` strips the Mark of the Web (`Zone.Identifier` stream) from safe file
+types so Windows stops warning about downloads. Config section `fileUnblocker`
+(hot-reloaded; off by default — the bundled template ships `enabled: false`, so the real
+folder list lives only in the live config).
+- Only extensions in `extensions` are touched (default: PDF, common image, video and audio
+  types). Executables, scripts, Office files and archives keep their mark.
+- Real-time: one `FileSystemWatcher` per folder (Created/Changed/Renamed), debounced per
+  file by `settleMs` because browsers write, rename, then stamp the mark. Sharing
+  violations are retried (5×, 2 s apart).
+- Safety net: a sweep at startup (and whenever the section changes) plus every
+  `sweepIntervalMinutes`. Needed because watcher buffers can overflow and a watched
+  folder can be deleted/recreated (the `Error` event triggers a sweep, and every sweep
+  first recreates any watcher that died). The tray item "Unblock files now" runs the
+  same sweep; a sweep requested while one is running makes it loop once more.
+- Config is normalized on load: `settleMs` clamped to 0..60000, `sweepIntervalMinutes` to
+  0..10080, a null list/section treated as empty/defaults. A section that still can't be
+  applied leaves the feature off (logged with `/log`) and is retried on the next reload.
+- Read-only files are left marked on purpose (deleting their stream is denied; clearing the
+  read-only flag would change metadata OneDrive syncs). Logged once per path.
+- `%USERPROFILE%` here is `C:\Users\<name>`, which has no Documents/OneDrive folders, so
+  the live config uses `%OneDriveCommercial%` / `%OneDriveConsumer%` (note `%OneDrive%`
+  is the *business* root on this machine).
+- Folders are `%VAR%`-expanded and junctions resolved to the real path (same reason as
+  `ConfigWatcher`). Junctions *inside* a watched folder are not followed (the home folder
+  is full of junctions into OneDrive; following them double-processes files). A folder
+  nested inside another watched folder is dropped.
+- OneDrive cloud-only placeholders and folders (`RECALL_ON_*` attributes) are skipped so
+  nothing gets downloaded. The stream is removed with `DeleteFileW(path + ":Zone.Identifier")`;
+  no mark means "file not found", which is the normal no-op.
+
 ## Mac mode (ShareMouse)
 The keyboard is shared with a Mac through ShareMouse. When the Mac has the keyboard,
 `MacModeDetector` flips the app into "Mac mode": a button uses its `macAction` (instead of

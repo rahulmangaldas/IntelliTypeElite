@@ -7,14 +7,16 @@ internal sealed class ConfigWatcher : IDisposable
     private readonly string _path;
     private readonly HidListener _listener;
     private readonly MouseDebouncer _mouseDebouncer;
+    private readonly FileUnblocker _fileUnblocker;
     private readonly List<FileSystemWatcher> _watchers = new();
     private readonly System.Threading.Timer _debounce;
 
-    public ConfigWatcher(string path, HidListener listener, MouseDebouncer mouseDebouncer)
+    public ConfigWatcher(string path, HidListener listener, MouseDebouncer mouseDebouncer, FileUnblocker fileUnblocker)
     {
         _path = path;
         _listener = listener;
         _mouseDebouncer = mouseDebouncer;
+        _fileUnblocker = fileUnblocker;
 
         // Editors often touch a file in several steps (truncate, write, rename);
         // debounce so we reload once things settle rather than mid-write.
@@ -49,7 +51,7 @@ internal sealed class ConfigWatcher : IDisposable
 
     // Walks up from dir looking for a reparse-point ancestor (junction/symlink) and, if
     // found, resolves it to build dir's real, physical path.
-    private static string? ResolveRealDirectory(string dir)
+    internal static string? ResolveRealDirectory(string dir)
     {
         for (var d = new DirectoryInfo(dir); d is not null; d = d.Parent)
         {
@@ -82,6 +84,9 @@ internal sealed class ConfigWatcher : IDisposable
 
         try { _mouseDebouncer.UpdateConfig(config.MouseDebounce); }
         catch (Exception ex) { Logger.Write($"MouseDebouncer.UpdateConfig failed: {ex.Message}"); }
+
+        try { _fileUnblocker.UpdateConfig(config.FileUnblocker); }
+        catch (Exception ex) { Logger.Write($"FileUnblocker.UpdateConfig failed: {ex.Message}"); }
     }
 
     public void Dispose()

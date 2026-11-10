@@ -22,7 +22,11 @@ internal static class Program
         using var mouseDebouncer = new MouseDebouncer(config.MouseDebounce);
         mouseDebouncer.Start();
 
-        using var configWatcher = new ConfigWatcher(configPath, listener, mouseDebouncer);
+        using var fileUnblocker = new FileUnblocker();
+        try { fileUnblocker.UpdateConfig(config.FileUnblocker); }
+        catch (Exception ex) { Logger.Write($"FileUnblocker.UpdateConfig failed: {ex.Message}"); }
+
+        using var configWatcher = new ConfigWatcher(configPath, listener, mouseDebouncer, fileUnblocker);
 
         using var trayIcon = new NotifyIcon
         {
@@ -36,6 +40,7 @@ internal static class Program
 
         menu.Items.Add("Open config", null, (_, _) =>
             Process.Start(new ProcessStartInfo(configPath) { UseShellExecute = true }));
+        menu.Items.Add("Unblock files now", null, (_, _) => Task.Run(fileUnblocker.SweepNow));
         menu.Items.Add(new ToolStripSeparator());
         if (Logger.Enabled)
         {
