@@ -55,6 +55,22 @@ The second one launches a Mac app through Spotlight. Raise the `delayMs` values 
 
 Keys accepted in `keys` include `ctrl`, `alt`, `shift`, `win`/`cmd`, `enter`, `space`, `tab`, `esc`, `backspace`, `delete`, the arrow, `home`/`end` and `pageup`/`pagedown` keys, `[`, `]`, letters, digits and `F1`–`F24`. An unrecognized key sends nothing rather than part of the combo.
 
+## Unblocking downloaded files
+
+Windows tags files that come from the internet with a "Mark of the Web", which is what triggers the "this file may be harmful" warnings and Protected View. The optional file unblocker removes that mark from safe file types (PDF, images, video and audio) in the folders you list, as soon as they appear, and leaves everything else (executables, scripts, Office files, archives) marked. It's off by default:
+
+```json
+"fileUnblocker": {
+  "enabled": true,
+  "folders": [ "%USERPROFILE%\\Downloads" ],
+  "includeSubfolders": true
+}
+```
+
+`%VAR%` references in `folders` are expanded. Also configurable: `extensions` (replaces the default list), `settleMs` (how long a new file must be quiet before it's touched, default 1500), and `sweepOnStart` / `sweepIntervalMinutes` (a full pass at startup and every 120 minutes by default, as a safety net in case the watcher misses something). "Unblock files now" in the tray menu runs a pass on demand.
+
+Junctions and symlinks inside a watched folder aren't followed, OneDrive files that are online-only are skipped so nothing gets downloaded, and read-only files are left marked.
+
 ## Logging
 
 Run with `/log` to enable a log file and "Open log" in the app menu.
