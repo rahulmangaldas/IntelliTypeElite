@@ -278,13 +278,43 @@ internal sealed class ActionRunner
             GetWindowThreadProcessId(hWnd, out uint pid);
             if (pid == 0) return null;
             using var process = Process.GetProcessById((int)pid);
-            return process.ProcessName;
+            string name = process.ProcessName;
+
+            // Packaged (UWP-style) apps such as Media Player, Calculator and Settings show
+            // their window inside a frame owned by ApplicationFrameHost; the real app
+            // lives in a child window belonging to another process. Report that process,
+            // so appOverrides can match "microsoft.media.player" and not the shared host.
+            if (name.Equals("ApplicationFrameHost", StringComparison.OrdinalIgnoreCase))
+            {
+                uint hostPid = pid;
+                uint realPid = 0;
+                EnumChildWindows(hWnd, (child, _) =>
+                {
+                    GetWindowThreadProcessId(child, out uint childPid);
+                    if (childPid == 0 || childPid == hostPid) return true;
+                    realPid = childPid;
+                    return false;
+                }, 0);
+
+                if (realPid != 0)
+                {
+                    using var real = Process.GetProcessById((int)realPid);
+                    return real.ProcessName;
+                }
+            }
+
+            return name;
         }
         catch
         {
             return null;
         }
     }
+
+    private delegate bool EnumChildProc(nint hWnd, nint lParam);
+
+    [DllImport("user32.dll")]
+    private static extern bool EnumChildWindows(nint hWndParent, EnumChildProc lpEnumFunc, nint lParam);
 
     // Accepts combos like "ctrl+alt+t" or a single key like "F5".
     private static void SendKeystroke(string combo)

@@ -37,6 +37,8 @@ real hardware and is authoritative in `config.json` — cross-referencing Micros
 official IntelliType 8.2 installer (`itypedevices.xml`, `commands.xml`) confirmed which
 buttons are semantically what (My Favorites 1-5, Favorites Legend, and the F1-F12 "F-Lock
 off" command row: Help/Undo/Redo/New/Open/Close/Reply/Forward/Send/Spell/Save/Print).
+The media keys (Mute, Stop, Play/Pause, Volume Down/Up, Previous/Next Track, Media) are report ID 4 byte 1,
+bits 0x01-0x80 in that order; they also still reach Windows as normal media keys, so an action here runs in addition to that.
 F-Lock itself sends no HID event — it's a local firmware-only toggle.
 
 The extracted installer (`support\IntelliType Pro 8.20.469.0\`, git-ignored — it's
@@ -69,6 +71,9 @@ wanted later.
   (Shift/Ctrl/Alt/Win held at press time, checked via `GetAsyncKeyState`). Resolution
   order: app match first, then modifier match within that scope (or the top-level
   scope if no app matched), then the plain default. Nesting is app → mod, not mod → app.
+  The foreground app is its process name, except that packaged apps (Media Player, Calculator,
+  Settings) run inside an `ApplicationFrameHost` frame, so the real process behind the frame's
+  child window is used instead -- e.g. `microsoft.media.player`, not `applicationframehost`.
 - Action types: `None` (no-op), `Keystroke` (`SendInput`, combo syntax `"ctrl+shift+t"`),
   `Launch` (`Process.Start`, `path`/`args`), `CloseWindow` (posts `WM_SYSCOMMAND`/
   `SC_CLOSE` to the foreground window directly — used for Close's default instead of

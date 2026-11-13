@@ -135,6 +135,68 @@
       "action": { "type": "None" }
     },
     {
+      "name": "Mute",
+      "reportId": 4,
+      "byteOffset": 1,
+      "bitMask": "0x01",
+      "action": { "type": "None" }
+    },
+    {
+      "name": "MediaStop",
+      "reportId": 4,
+      "byteOffset": 1,
+      "bitMask": "0x02",
+      "action": { "type": "None" }
+    },
+    {
+      "name": "PlayPause",
+      "reportId": 4,
+      "byteOffset": 1,
+      "bitMask": "0x04",
+      "action": { "type": "None" }
+    },
+    {
+      "name": "VolumeDown",
+      "reportId": 4,
+      "byteOffset": 1,
+      "bitMask": "0x08",
+      "action": { "type": "None" }
+    },
+    {
+      "name": "VolumeUp",
+      "reportId": 4,
+      "byteOffset": 1,
+      "bitMask": "0x10",
+      "action": { "type": "None" }
+    },
+    {
+      "name": "PreviousTrack",
+      "reportId": 4,
+      "byteOffset": 1,
+      "bitMask": "0x20",
+      "action": { "type": "None" },
+      "appOverrides": {
+        "microsoft.media.player": { "action": { "type": "Keystroke", "keys": "ctrl+left" } }
+      }
+    },
+    {
+      "name": "NextTrack",
+      "reportId": 4,
+      "byteOffset": 1,
+      "bitMask": "0x40",
+      "action": { "type": "None" },
+      "appOverrides": {
+        "microsoft.media.player": { "action": { "type": "Keystroke", "keys": "ctrl+right" } }
+      }
+    },
+    {
+      "name": "MediaSelect",
+      "reportId": 4,
+      "byteOffset": 1,
+      "bitMask": "0x80",
+      "action": { "type": "None" }
+    },
+    {
       "name": "F1_Help",
       "reportId": 4,
       "byteOffset": 3,
